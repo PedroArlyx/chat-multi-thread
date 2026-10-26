@@ -12,13 +12,20 @@ import java.util.List;
 
 public class BancoDados {
 
+    
+
     private static final String URL = "jdbc:sqlite:chat.db";
 
-    public static Connection conectar() throws SQLException{
-        return DriverManager.getConnection(URL);
+     public static Connection conectar() throws SQLException {
+        Connection conn = DriverManager.getConnection(URL);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA journal_mode=WAL;");
+        }
+        return conn;
     }
 
-     public static void inicializar() {
+
+    public static void inicializar() {
             
             String sqlUsuarios = """
                 CREATE TABLE IF NOT EXISTS usuarios (
@@ -44,12 +51,24 @@ public class BancoDados {
             try (Connection conn = conectar();
                 Statement stmt = conn.createStatement()) {
                 
+                stmt.execute("PRAGMA journal_mode=WAL;");
                 stmt.execute(sqlUsuarios);
                 stmt.execute(sqlMensagens);
                 System.out.println("[BANCO] Tabelas verificadas/criadas com sucesso.");
 
             } catch (SQLException e) {
                 System.err.println("[BANCO] Erro ao inicializar o banco: " + e.getMessage());
+            }
+        }
+
+        public static void salvarUsuario(String apelido) {
+            String sql = "INSERT OR IGNORE INTO usuarios (apelido) VALUES (?);";
+            try (Connection conn = conectar();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, apelido);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("[BANCO] Erro ao registrar usuário: " + e.getMessage());
             }
         }
 

@@ -24,8 +24,6 @@ public class Cliente {
         this.encerrando = false;
 
         System.out.println("[CLIENTE] Conectado a " + ENDERECO + ":" + PORTA + ".");
-        System.out.println("[CLIENTE] Digite /sair para encerrar.");
-
     }
 
     public static void main(String[] args) {
@@ -38,20 +36,45 @@ public class Cliente {
     }
 
     public void iniciar() {
-        Thread threadReceptora = new Thread(this::receberMensagens);
-        threadReceptora.start();
-
         try {
+        
+            while (true) {
+                System.out.print("Digite seu apelido para entrar: ");
+                String apelido = scanner.nextLine().trim();
+                if (apelido.isBlank()) {
+                    System.out.println("[CLIENTE] O apelido não pode ser vazio.");
+                    continue;
+                }
+
+                saida.writeUTF(apelido);
+                saida.flush();
+
+                String resposta = entrada.readUTF();
+                if (resposta.startsWith("[OK]")) {
+                    System.out.println(resposta);
+                    break;
+                } else {
+                    System.out.println(resposta);
+                }
+            }
+
+  
+            Thread threadReceptora = new Thread(this::receberMensagens);
+            threadReceptora.start();
+
+          
             enviarMensagem();
+        } catch (IOException e) {
+            System.err.println("[CLIENTE] Erro ao comunicar com o servidor: " + e.getMessage());
         } finally {
             encerrar();
         }
     }
 
     public void enviarMensagem() {
+        System.out.println("[CLIENTE] Digite sua mensagem ou /ajuda para opções (/sair para encerrar).");
         System.out.print("> ");
         while (scanner.hasNextLine()) {
-
             String mensagem = scanner.nextLine();
 
             if (mensagem.equalsIgnoreCase("/sair")) break;
@@ -64,7 +87,7 @@ public class Cliente {
                 saida.writeUTF(mensagem);
                 saida.flush();
             } catch (IOException e) {
-                System.out.println("[CLIENTE] Não foi possível enviar a mensagem");
+                System.out.println("[CLIENTE] Não foi possível enviar a mensagem.");
                 break;
             }
             System.out.print("> ");
@@ -75,13 +98,12 @@ public class Cliente {
         try {
             while (true) {
                 String mensagem = entrada.readUTF();
-                System.out.println("[CHAT] " + mensagem);
+                System.out.println("\n" + mensagem);
                 System.out.print("> ");
             }
         } catch (IOException exception) {
             if (!encerrando) {
-                System.out.println();
-                System.out.println("[CLIENTE] Conexão com o servidor encerrada.");
+                System.out.println("\n[CLIENTE] Conexão com o servidor encerrada.");
             }
         }
     }
@@ -96,5 +118,4 @@ public class Cliente {
             System.err.println("[CLIENTE] Erro ao fechar conexão.");
         }
     }
-
 }
