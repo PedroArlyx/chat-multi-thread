@@ -155,7 +155,7 @@ public class Servidor {
             destinatarios = new ArrayList<>(clientes);
         }
         destinatarios.forEach((conexaoCliente) -> {
-            if (conexaoCliente != origem) {
+            if (conexaoCliente != origem && conexaoCliente.getIdentificacao() != null) {
                 conexaoCliente.enviarMensagem(mensagem);
             }
         });

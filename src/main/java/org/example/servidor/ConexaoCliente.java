@@ -14,7 +14,7 @@ public class ConexaoCliente implements Runnable {
     private final Servidor servidor;
     private final DataInputStream entrada;
     private final DataOutputStream saida;
-    private String identificacao;
+    private volatile String identificacao;
 
     public ConexaoCliente(Socket conexao, Servidor servidor) throws IOException {
         this.conexao = conexao;
