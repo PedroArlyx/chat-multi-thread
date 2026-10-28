@@ -134,11 +134,46 @@ public class Servidor {
                 enviarMensagemPrivada(remetente, destinatario, texto);
             }
 
+            case "/historico" -> {
+                if (partes.length > 2) {
+                    remetente.enviarMensagem("[SERVIDOR] Uso correto: /historico [quantidade]");
+                    return;
+                }
+
+                int limite = 15;
+                if (partes.length == 2) {
+                    try {
+                        limite = Integer.parseInt(partes[1]);
+                    } catch (NumberFormatException e) {
+                        remetente.enviarMensagem("[SERVIDOR] A quantidade deve ser um número entre 1 e 50.");
+                        return;
+                    }
+                }
+
+                if (limite < 1 || limite > 50) {
+                    remetente.enviarMensagem("[SERVIDOR] A quantidade deve ser um número entre 1 e 50.");
+                    return;
+                }
+
+                List<String> historico = BancoDados.buscarHistorico("geral", limite);
+                if (historico.isEmpty()) {
+                    remetente.enviarMensagem("[HISTÓRICO] Nenhuma mensagem pública encontrada.");
+                    return;
+                }
+
+                remetente.enviarMensagem("========== HISTÓRICO DE MENSAGENS ==========");
+                for (String linha : historico) {
+                    remetente.enviarMensagem(linha);
+                }
+                remetente.enviarMensagem("============================================");
+            }
+
             case "/ajuda", "/help" -> {
                 remetente.enviarMensagem("""
                     [AJUDA] Comandos disponíveis:
                     /online                - Lista usuários conectados
                     /msg <apelido> <texto> - Envia mensagem privada
+                    /historico [quantidade] - Exibe mensagens públicas anteriores (padrão: 15, máximo: 50)
                     /ajuda                 - Exibe esta mensagem de ajuda
                     /sair                  - Desconecta do chat
                     """);
@@ -164,6 +199,19 @@ public class Servidor {
     public void removerCliente(ConexaoCliente cliente) {
         if (clientes.remove(cliente)) {
             System.out.println("[SERVIDOR] Cliente desconectado " + cliente.getIdentificacao() + " | ativos: " + clientes.size());
+        }
+    }
+
+    public void parar() {
+        try {
+            instancia.close();
+        } catch (IOException ignored) {
+        }
+        synchronized (clientes) {
+            for (ConexaoCliente c : clientes) {
+                c.fechar();
+            }
+            clientes.clear();
         }
     }
 }

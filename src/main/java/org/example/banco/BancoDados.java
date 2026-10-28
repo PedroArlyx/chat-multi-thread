@@ -14,10 +14,18 @@ public class BancoDados {
 
     
 
-    private static final String URL = "jdbc:sqlite:chat.db";
+    private static String obterUrl() {
+        if (new java.io.File("chat.db").exists()) {
+            return "jdbc:sqlite:chat.db";
+        }
+        if (new java.io.File("chat-multi-thread/chat.db").exists()) {
+            return "jdbc:sqlite:chat-multi-thread/chat.db";
+        }
+        return "jdbc:sqlite:chat.db";
+    }
 
-     public static Connection conectar() throws SQLException {
-        Connection conn = DriverManager.getConnection(URL);
+    public static Connection conectar() throws SQLException {
+        Connection conn = DriverManager.getConnection(obterUrl());
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA journal_mode=WAL;");
         }
